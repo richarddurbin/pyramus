@@ -5,7 +5,7 @@
  * Description: buffered package to read arbitrary sequence files - much faster than readseq
  * Exported functions:
  * HISTORY:
- * Last edited: Apr 17 02:57 2020 (rd109)
+ * Last edited: Apr 17 18:35 2020 (rd109)
  * Created: Fri Nov  9 00:21:21 2018 (rd109)
  *-------------------------------------------------------------------
  */
@@ -676,14 +676,12 @@ BOOL bamFileOpenRead (char* filename, SeqIO *si)
       return FALSE ;
     }
 
-  printf ("happy 1\n") ;
   if (!(bf->h = sam_hdr_read (bf->f)))
     { fprintf(stderr, "BamFileOpen failed to read header\n") ;
       bamFileClose (si) ;
       return FALSE ;
     }
 
-  printf ("happy 2\n") ;
   if (!(bf->b = bam_init1 ()))
     { fprintf(stderr, "BamFileOpen failed to create record buffer\n") ;
       bamFileClose (si) ;
