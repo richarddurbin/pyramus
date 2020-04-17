@@ -20,7 +20,7 @@
  * -------------------------------------------------------------------
  * Exported functions:
  * HISTORY:
- * Last edited: Jan 24 07:16 2019 (rd109)
+ * Last edited: Apr 17 03:19 2020 (rd109)
  * Created: Fri Jan  7 09:20:25 2011 (rd)
  *-------------------------------------------------------------------
  */
@@ -191,7 +191,6 @@ BOOL hashAdd (HASH hx, HASHKEY k, int *index)
 {
   TRUE_HASH *h = (TRUE_HASH*) hx ;
   long int hash, delta = 0 ;
-  int test ;
 
   if (!h->guard)
     hashDouble (h) ;
