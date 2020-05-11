@@ -19,7 +19,8 @@ $(UTILS_OBJS): utils.h $(UTILS_HEADERS)
 ONE_DIR = ../vgp-tools/Core
 BAM_DIR = ../htslib
 SEQIO_OPTS = -DONEIO -I$(ONE_DIR) -DBAMIO -I$(BAM_DIR)/htslib/
-SEQIO_LIBS = -L$(ONE_DIR) -lONE -L$(BAM_DIR) -lhts -lm -lbz2 -llzma -lcurl -lz 
+SEQIO_LIBS = -L$(ONE_DIR) -lONE -L$(BAM_DIR) -Wl,-rpath $(BAM_DIR) -lhts -lm -lbz2 -llzma -lcurl -lz 
+# the "-Wl,-rpath $(BAM_DIR)" incantation is needed for local dynamic linking if htslib is not installed centrally
 
 seqio.o: seqio.c seqio.h 
 	$(CC) $(SEQIO_OPTS) -c $^
