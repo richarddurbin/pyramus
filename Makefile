@@ -23,7 +23,7 @@ SEQIO_LIBS = -L$(ONE_DIR) -lONE -L$(BAM_DIR) -Wl,-rpath $(BAM_DIR) -lhts -lm -lb
 # the "-Wl,-rpath $(BAM_DIR)" incantation is needed for local dynamic linking if htslib is not installed centrally
 
 seqio.o: seqio.c seqio.h 
-	$(CC) $(SEQIO_OPTS) -c $^
+	$(CC) $(CFLAGS) $(SEQIO_OPTS) -c $^
 
 ### programs
 

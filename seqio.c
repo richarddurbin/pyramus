@@ -5,7 +5,7 @@
  * Description: buffered package to read arbitrary sequence files - much faster than readseq
  * Exported functions:
  * HISTORY:
- * Last edited: May 11 22:12 2020 (rd109)
+ * Last edited: May 12 00:12 2020 (rd109)
  * Created: Fri Nov  9 00:21:21 2018 (rd109)
  *-------------------------------------------------------------------
  */
@@ -215,7 +215,7 @@ static void bufDouble (SeqIO *si)
 #define bufAdvanceInRecord(si) \
   { bufAdvanceEndRecord(si) ; \
     if (!si->nb) \
-      { fprintf (stderr, "incomplete sequence record line %llu\n", si->line) ; return FALSE ; } \
+      { fprintf (stderr, "incomplete sequence record line %" PRIu64 "\n", si->line) ; return FALSE ; } \
   } 
 
 static void bufHardRefill (SeqIO *si, U64 n) /* like bufRefill() but for bufConfirmNbytes() */
@@ -224,7 +224,7 @@ static void bufHardRefill (SeqIO *si, U64 n) /* like bufRefill() but for bufConf
   memmove (si->buf, si->buf + si->recStart, si->b - si->buf) ;
   si->recStart = 0 ; si->b = si->buf ;
   si->nb += gzread (si->gzf, si->b + si->nb, si->bufSize - si->nb) ;
-  if (si->nb < n) die ("incomplete sequence record %llu", si->line) ;
+  if (si->nb < n) die ("incomplete sequence record %" PRIu64 "", si->line) ;
 }
 
 #define bufConfirmNbytes(si, n) { if (si->nb < n) bufHardRefill (si, n) ; }
@@ -247,7 +247,7 @@ BOOL seqIOread (SeqIO *si)
 	}
       if (si->convert)
 	{ char *s = si->seqBuf, *e = s + si->seqLen, *sv = oneString(vf) ;
-	  while (s < e) *s++ = si->convert[*sv++] ;
+	  while (s < e) *s++ = si->convert[(int)*sv++] ;
 	}
       else
 	memcpy (si->seqBuf, oneString(vf), si->seqLen) ;
@@ -297,9 +297,9 @@ BOOL seqIOread (SeqIO *si)
   /* if get to here then this is a text file, FASTA or FASTQ */
   
   if (si->type == FASTA)
-    { if (*si->b != '>') die ("no initial > for FASTA record line %llu", si->line) ; }
+    { if (*si->b != '>') die ("no initial > for FASTA record line %" PRIu64 "", si->line) ; }
   else if (si->type == FASTQ)
-    { if (*si->b != '@') die ("no initial @ for FASTQ record line %llu", si->line) ; }
+    { if (*si->b != '@') die ("no initial @ for FASTQ record line %" PRIu64 "", si->line) ; }
   bufAdvanceInRecord(si) ; si->idStart = si->b - si->buf ;
   while (!isspace(*si->b)) bufAdvanceInRecord(si) ;
   si->idLen = si->b - sqioId(si) ;
@@ -319,7 +319,7 @@ BOOL seqIOread (SeqIO *si)
 	  ++si->line ; bufAdvanceEndRecord(si) ;
 	}
       char *s = sqioSeq(si), *t = s ;
-      while (s < si->b) if ((*t++ = si->convert[*s++]) < 0) --t ;
+      while (s < si->b) if ((*t++ = si->convert[(int)*s++]) < 0) --t ;
       si->seqLen = t - sqioSeq(si) ;
     }
   else if (si->type == FASTQ)
@@ -327,16 +327,16 @@ BOOL seqIOread (SeqIO *si)
       si->seqLen = si->b - sqioSeq(si) ;
       if (si->convert)
 	{ char *s = sqioSeq(si) ;
-	  while (s < si->b) { *s = si->convert[*s] ; ++s ; }
+	  while (s < si->b) { *s = si->convert[(int)*s] ; ++s ; }
 	}
       ++si->line ; bufAdvanceInRecord(si) ; 	      /* line 3 */
-      if (*si->b != '+') die ("missing + FASTQ line %llu", si->line) ;
+      if (*si->b != '+') die ("missing + FASTQ line %" PRIu64 "", si->line) ;
       while (*si->b != '\n') bufAdvanceInRecord(si) ; /* ignore remainder of + line */
       ++si->line ; bufAdvanceInRecord(si) ;	      /* line 4 */
       si->qualStart = si->b - si->buf ;
       while (*si->b != '\n') bufAdvanceInRecord(si) ;
       if (si->b - si->buf - si->qualStart != si->seqLen)
-	die ("qual not same length as seq line %llu", si->line) ;
+	die ("qual not same length as seq line %" PRIu64 "", si->line) ;
       if (si->isQual) { char *q = sqioQual(si), *e = q + si->seqLen ; while (q < e) *q++ -= 33 ; }
       ++si->line ; bufAdvanceEndRecord(si) ;
     }
@@ -402,7 +402,7 @@ void seqIOflush (SeqIO *si)	/* writes buffer to file and resets to 0 */
   U64 retVal, nBytes = si->b - si->buf ;
   if (si->gzf) retVal = gzwrite (si->gzf, si->buf, nBytes) ;
   else retVal = write (si->fd, si->buf, nBytes) ;
-  if (retVal != nBytes) die ("seqio write error %llu not %llu bytes written", retVal, nBytes) ;
+  if (retVal != nBytes) die ("seqio write error %" PRIu64 " not %" PRIu64 " bytes written", retVal, nBytes) ;
   si->b = si->buf ;
   si->nb = si->bufSize ;
 }
@@ -442,7 +442,7 @@ void seqIOwrite (SeqIO *si, char *id, char *desc, U64 seqLen, char *seq, char *q
       if (desc) { *si->b++ = ' ' ; strcpy (si->b, desc) ; si->b += si->descLen ; }
       *si->b++ = '\n' ;
       memcpy (si->b, seq, seqLen) ;
-      if (si->convert) while (seqLen--) { *si->b = si->convert[*si->b] ; ++si->b ; }
+      if (si->convert) while (seqLen--) { *si->b = si->convert[(int)*si->b] ; ++si->b ; }
       else si->b += seqLen ;
       *si->b++ = '\n' ;
     }
@@ -452,7 +452,7 @@ void seqIOwrite (SeqIO *si, char *id, char *desc, U64 seqLen, char *seq, char *q
       if (desc) { *si->b++ = ' ' ; strcpy (si->b, desc) ; si->b += si->descLen ; }
       *si->b++ = '\n' ;
       memcpy (si->b, seq, seqLen) ;
-      if (si->convert) while (seqLen--) { *si->b = si->convert[*si->b] ; ++si->b ; }
+      if (si->convert) while (seqLen--) { *si->b = si->convert[(int)*si->b] ; ++si->b ; }
       else si->b += seqLen ;
       *si->b++ = '\n' ;
       *si->b++ = '+' ;
@@ -484,11 +484,11 @@ U64 sqioSeqPack (char *s, U8 *u, U64 len, int *convert) /* compress s into (len+
   int i ;
   if (!convert) convert = dna2index4Conv ;
   while (len > 4)
-    { *u = 0 ; for (i = 0 ; i < 4 ; ++i) *u = (*u << 2) | convert[*s++] ;
+    { *u = 0 ; for (i = 0 ; i < 4 ; ++i) *u = (*u << 2) | convert[(int)*s++] ;
       len -= 4 ; ++u ;
     }
   if (len)
-    { *u = 0 ; for (i = 0 ; i < len ; ++i) *u = (*u << 2) | convert[*s++] ;
+    { *u = 0 ; for (i = 0 ; i < len ; ++i) *u = (*u << 2) | convert[(int)*s++] ;
       ++u ;
     }
   return (u-u0) ;
@@ -723,13 +723,13 @@ BOOL bamRead (SeqIO *si)
   char *s = si->seqBuf ;
   if (bf->b->core.flag & BAM_FREVERSE)
     for (i = si->seqLen ; i-- ; )
-      *s++ = binaryAmbig2text[binaryAmbigComplement[bam_seqi(bseq,i)]] ;
+      *s++ = binaryAmbig2text[(int)binaryAmbigComplement[(int)bam_seqi(bseq,i)]] ;
   else
     for (i = 0 ; i < si->seqLen ; ++i)
       *s++ = binaryAmbig2text[bam_seqi(bseq,i)] ;
   if (si->convert)
     while (s-- > si->seqBuf) 		// NB relies on s == seqBuf+seqLen at start
-      *s = si->convert[*s] ;
+      *s = si->convert[(int)*s] ;
   
   if (si->isQual)
     { char *bq = (char*) bam_get_qual (bf->b) ;
