@@ -12,7 +12,7 @@
 
 #include <stdio.h>		/* FILE etc. */
 #include <stdlib.h>		/* malloc(), free(), ... notation */
-#include <stdint.h>		/* for standard size int types */
+#include <inttypes.h>		/* for standard size int types and their printf macros PRI* */
 #include <string.h>		/* memset() */
 #include <limits.h>		/* INT_MAX etc. */
 #include <assert.h>

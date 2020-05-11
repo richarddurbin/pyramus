@@ -5,7 +5,7 @@
  * Description:
  * Exported functions:
  * HISTORY:
- * Last edited: Apr 27 15:46 2020 (rd109)
+ * Last edited: May 11 22:21 2020 (rd109)
  * Created: Sat Nov 10 08:51:49 2018 (rd109)
  *-------------------------------------------------------------------
  */
@@ -17,7 +17,7 @@
 #include <zlib.h>
 
 typedef enum { UNKNOWN, FASTA, FASTQ, BINARY, ONE, BAM } SeqIOtype ;
-static char* seqIOtypeName[] = { "unknown", "fasta", "fastq", "binary", "onecode", "bam" } ;
+extern char* seqIOtypeName[] ; // = { "unknown", "fasta", "fastq", "binary", "onecode", "bam" } ;
 
 typedef struct {
   SeqIOtype type ;

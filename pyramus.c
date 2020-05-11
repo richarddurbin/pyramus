@@ -120,7 +120,7 @@ void examine2 (Reference *ref, SeqIO *rio) // show where reads match
 	  else while (c--) ++loc2[*s++/200] ;
 	}
 
-      printf ("read length %llu\n", rio->seqLen) ;
+      printf ("read length %" PRIu64 "\n", rio->seqLen) ;
 
       for (i = 0 ; i < 150 ; ++i)
 	if (!loc1[i]) putchar ('.') ;

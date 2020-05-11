@@ -5,7 +5,7 @@
  * Description: buffered package to read arbitrary sequence files - much faster than readseq
  * Exported functions:
  * HISTORY:
- * Last edited: May  7 01:13 2020 (rd109)
+ * Last edited: May 11 22:12 2020 (rd109)
  * Created: Fri Nov  9 00:21:21 2018 (rd109)
  *-------------------------------------------------------------------
  */
@@ -23,6 +23,9 @@ BOOL bamFileOpenRead (char* filename, SeqIO *si) ;
 BOOL bamRead (SeqIO *si) ;
 void bamFileClose (SeqIO *si) ;
 #endif
+
+// global
+char* seqIOtypeName[] = { "unknown", "fasta", "fastq", "binary", "onecode", "bam" } ;
 
 SeqIO *seqIOopenRead (char *filename, int* convert, BOOL isQual)
 {
