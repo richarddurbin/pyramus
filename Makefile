@@ -12,14 +12,14 @@ clean:
 
 ### object files
 
-UTILS_OBJS=hash.o dict.o array.o # utils.o 	# must include utils.o if exclude VGP below
+UTILS_OBJS=hash.o dict.o array.o utils.o
 UTILS_HEADERS=utils.h array.h dict.h hash.h
 $(UTILS_OBJS): utils.h $(UTILS_HEADERS)
 
-VGP_DIR = ../vgp-tools
+ONE_DIR = ../vgp-tools/core
 BAM_DIR = ../htslib
-SEQIO_OPTS = -DVGPIO -I$(VGP_DIR)/include -DBAMIO -I$(BAM_DIR)/htslib/
-SEQIO_LIBS = -L$(VGP_DIR)/lib -lVGP $(BAM_DIR)/libhts.a -lz -lm -lbz2 -llzma -lcurl -lz 
+SEQIO_OPTS = -DONEIO -I$(ONE_DIR) -DBAMIO -I$(BAM_DIR)/htslib/
+SEQIO_LIBS = -L$(ONE_DIR) -lONE $(BAM_DIR)/libhts.a -lm -lbz2 -llzma -lcurl -lz 
 
 seqio.o: seqio.c seqio.h 
 	$(CC) $(SEQIO_OPTS) -c $^
@@ -29,7 +29,7 @@ seqio.o: seqio.c seqio.h
 pyramus: pyramus.c seqio.o $(UTILS_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(SEQIO_LIBS)
 
-composition: composition.c seqio.o
+composition: composition.c seqio.o utils.o
 	$(CC) $(CFLAGS) $^ -o $@ $(SEQIO_LIBS)
 
 

@@ -5,7 +5,7 @@
  * Description: buffered package to read arbitrary sequence files - much faster than readseq
  * Exported functions:
  * HISTORY:
- * Last edited: Apr 17 18:35 2020 (rd109)
+ * Last edited: May  7 01:13 2020 (rd109)
  * Created: Fri Nov  9 00:21:21 2018 (rd109)
  *-------------------------------------------------------------------
  */
@@ -14,8 +14,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#ifdef VGPIO
-#include "VGPlib.h"
+#ifdef ONEIO
+#include "ONElib.h"
 #endif
 
 #ifdef BAMIO
@@ -104,25 +104,25 @@ SeqIO *seqIOopenRead (char *filename, int* convert, BOOL isQual)
 	  }
       }
     }
-#ifdef VGPIO
+#ifdef ONEIO
   else if (*si->buf == '1')
     { gzclose (si->gzf) ; si->gzf = 0 ;
-      VgpFile *vf = vgpFileOpenRead (filename, SEQ, 1) ;
+      OneFile *vf = oneFileOpenRead (filename, 0, "seq", 1) ;
       if (!vf)
-	{ fprintf (stderr, "failed to open VGP seq file %s\n", filename) ;
+	{ fprintf (stderr, "failed to open ONE seq file %s\n", filename) ;
 	  seqIOclose (si) ;
 	  return 0 ;
 	}
-      si->type = VGP ; // important that this is after successful open
+      si->type = ONE ; // important that this is after successful open
       si->handle = vf ;
-      if (vf->lineInfo['S']->given.count)
-	{ si->nSeq = vf->lineInfo['S']->given.count ;
-	  si->totSeqLen = vf->lineInfo['S']->given.total ;
-	  si->maxSeqLen = vf->lineInfo['S']->given.max ;
+      if (vf->info['S']->given.count)
+	{ si->nSeq = vf->info['S']->given.count ;
+	  si->totSeqLen = vf->info['S']->given.total ;
+	  si->maxSeqLen = vf->info['S']->given.max ;
 	  si->seqBuf = new0 (si->maxSeqLen+1,char) ;
 	  si->qualBuf = new0 (si->maxSeqLen+1,char) ;
 	}
-      while (vgpReadLine (vf) && vf->lineType != 'S') ; // move up to first sequence line
+      while (oneReadLine (vf) && vf->lineType != 'S') ; // move up to first sequence line
       si->seqStart = 0 ;
     }
 #endif
@@ -163,9 +163,9 @@ void seqIOclose (SeqIO *si)
 	  *(U64*)si->b = si->maxSeqLen ; si->b += 8 ;
 	  seqIOflush (si) ;
 	}
-#ifdef VGPIO
-      if (si->type == VGP)
-	vgpFileClose ((VgpFile*)si->handle) ;
+#ifdef ONEIO
+      if (si->type == ONE)
+	oneFileClose ((OneFile*)si->handle) ;
 #endif
 #ifdef BAMIO
       if (si->type == BAM)
@@ -231,11 +231,11 @@ static void bufHardRefill (SeqIO *si, U64 n) /* like bufRefill() but for bufConf
 BOOL seqIOread (SeqIO *si)
 {
 
-#ifdef VGPIO
-  if (si->type == VGP)
-    { VgpFile *vf = (VgpFile*) si->handle ;
-      if (!vf->lineType) return FALSE ; // at end of file
-      si->seqLen = vgpLen(vf) ; // otherwise we are at an 'S' line
+#ifdef ONEIO
+  if (si->type == ONE)
+    { OneFile *vf = (OneFile*) si->handle ;
+      if (vf->lineType != 'S') return FALSE ; // at end of file
+      si->seqLen = oneLen(vf) ; // otherwise we are at an 'S' line
       if (si->seqLen > si->maxSeqLen)
 	{ if (si->maxSeqLen) { free (si->seqBuf) ; if (si->isQual) free (si->qualBuf) ; }
 	  si->maxSeqLen = si->seqLen ;
@@ -243,19 +243,20 @@ BOOL seqIOread (SeqIO *si)
 	  if (si->isQual) si->qualBuf = new0 (si->maxSeqLen+1, char) ;
 	}
       if (si->convert)
-	{ char *s = si->seqBuf, *e = s + si->seqLen, *sv = vgpString(vf) ;
+	{ char *s = si->seqBuf, *e = s + si->seqLen, *sv = oneString(vf) ;
 	  while (s < e) *s++ = si->convert[*sv++] ;
 	}
       else
-	memcpy (si->seqBuf, vgpString(vf), si->seqLen) ;
+	memcpy (si->seqBuf, oneString(vf), si->seqLen) ;
+      if (!oneReadLine (vf)) return FALSE ;
       if (si->isQual)
-	{ while (vgpReadLine (vf) && vf->lineType != 'Q' && vf->lineType != 'S') ;
+	{ while (vf->lineType != 'Q' && vf->lineType != 'S') if (!oneReadLine (vf)) return FALSE;
 	  if (vf->lineType == 'Q')
-	    { char *q = si->qualBuf, *e = q + si->seqLen, *qv = vgpString(vf) ;
+	    { char *q = si->qualBuf, *e = q + si->seqLen, *qv = oneString(vf) ;
 	      while (q < e) *q++ = *qv++ - 33 ;
 	    }
 	}
-      while (vgpReadLine (vf) && vf->lineType != 'S') ; // move to next sequence line, or end
+      while (vf->lineType != 'S') if (!oneReadLine (vf)) return FALSE ;
       return TRUE ;
     }
 #endif
