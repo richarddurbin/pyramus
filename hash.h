@@ -37,12 +37,11 @@
 
 typedef void* HASH ;
 typedef union {long int i ; float f ; void* p ;} HASHKEY ;
-static  HASHKEY _hk ;
 
 /* define keys so as to allow ourselves to hash value 0 */
-#define HASH_INT(x) (_hk.i = (x)^INT_MAX, _hk)
-#define HASH_FLOAT(x) (_hk.f = (x), _hk.i ^= INT_MAX, _hk)
-#define HASH_PTR(x) (_hk.p = (x), _hk)
+static inline HASHKEY HASH_INT   (long int i) { HASHKEY hk ; hk.i = i^INT_MAX ; return hk ; }
+static inline HASHKEY HASH_FLOAT (float f) { HASHKEY hk ; hk.f = f ; hk.i ^= INT_MAX ; return hk ; }
+static inline HASHKEY HASH_PTR   (void *p) { HASHKEY hk ; hk.p = p ; return hk ; }
 
 HASH hashCreate (int n) ;
 void hashDestroy (HASH h) ;
