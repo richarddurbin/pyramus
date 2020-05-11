@@ -16,7 +16,7 @@ UTILS_OBJS=hash.o dict.o array.o utils.o
 UTILS_HEADERS=utils.h array.h dict.h hash.h
 $(UTILS_OBJS): utils.h $(UTILS_HEADERS)
 
-ONE_DIR = ../vgp-tools/core
+ONE_DIR = ../vgp-tools/Core
 BAM_DIR = ../htslib
 SEQIO_OPTS = -DONEIO -I$(ONE_DIR) -DBAMIO -I$(BAM_DIR)/htslib/
 SEQIO_LIBS = -L$(ONE_DIR) -lONE $(BAM_DIR)/libhts.a -lm -lbz2 -llzma -lcurl -lz 
